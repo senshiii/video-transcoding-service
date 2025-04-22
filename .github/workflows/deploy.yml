@@ -48,4 +48,4 @@ jobs:
           aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
 
       - name: Deploy to AWS Lambda
-        run: aws lambda update-function-code --function-name ${{env.LAMBDA_FUNCTION_NAME}} --region ${{env.WS_REGION}} --zip-file fileb://target/${{env.ARTIFACT_NAME}}
+        run: aws lambda update-function-code --function-name ${{env.LAMBDA_FUNCTION_NAME}} --region ${{env.AWS_REGION}} --zip-file fileb://target/${{env.ARTIFACT_NAME}}
