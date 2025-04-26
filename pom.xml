@@ -101,7 +101,7 @@
         <version>3.6.0</version>
         <configuration>
           <createDependencyReducedPom>false</createDependencyReducedPom>
-          <finalName>lambda</finalName>
+          <finalName>VideoTranscoderLambda</finalName>
         </configuration>
         <executions>
           <execution>

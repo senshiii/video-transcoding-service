@@ -6,14 +6,14 @@ name: Build and Deploy to AWS Lambda
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "main" ]
+    branches: [ "main", "dev" ]
   pull_request:
     branches: [ "main" ]
 
 env:
   AWS_REGION: us-east-1
   LAMBDA_FUNCTION_NAME: VideoTranscoder
-  ARTIFACT_NAME: lambda.jar
+  ARTIFACT_NAME: VideoTranscoderLambda.jar
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
