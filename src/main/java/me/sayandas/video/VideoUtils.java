@@ -9,13 +9,18 @@ import net.bramp.ffmpeg.probe.FFmpegStream;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.logging.Logger;
 
 public class VideoUtils {
+
+    private static Logger log = Logger.getLogger(VideoUtils.class.getName());
 
     public static void generateVideo(Path videoFile, int width, int height) throws IOException {
         FFprobe fFprobe = new FFprobe();
         System.out.println("Successfully loaded ffprobe");
-        FFmpeg fFmpeg = new FFmpeg("C:\\ProgramData\\chocolatey\\bin\\ffmpeg.exe");
+        String ffmpegPath = System.getenv("ffmpeg-layer-path");
+        log.finer("Env variable ffmpeg-layer-path: " + ffmpegPath);
+        FFmpeg fFmpeg = new FFmpeg(ffmpegPath);
         System.out.println("Successfully loaded ffmpeg");
 
         System.out.println("videoFile = " + videoFile);
@@ -40,7 +45,9 @@ public class VideoUtils {
     }
 
     public static VideoResolutionProbeResult getVideoResolution(String videoFilePath) throws IOException {
-        FFprobe ffprobe = new FFprobe("C:\\ProgramData\\chocolatey\\bin\\ffprobe.exe");
+        String ffprobePath = System.getenv("ffprobe-layer-path");
+        log.finer("Env variable ffprobe-layer-path: " + ffprobePath);
+        FFprobe ffprobe = new FFprobe("/opt/ffprobe-layer/bin/ffprobe");
         FFmpegProbeResult probeResult = ffprobe.probe(videoFilePath);
         System.out.println(probeResult.getStreams());
         FFmpegStream stream = probeResult.getStreams().get(0);
