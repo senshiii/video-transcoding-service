@@ -47,7 +47,8 @@ public class VideoUtils {
     public static VideoResolutionProbeResult getVideoResolution(String videoFilePath) throws IOException {
         String ffprobePath = System.getenv("ffprobe_layer_path");
         log.finer("Env variable ffprobe-layer-path: " + ffprobePath);
-        FFprobe ffprobe = new FFprobe("/opt/ffprobe-layer/bin/ffprobe");
+        FFprobe ffprobe = new FFprobe(ffprobePath);
+        log.fine("Successfully loaded ffprobe");
         FFmpegProbeResult probeResult = ffprobe.probe(videoFilePath);
         System.out.println(probeResult.getStreams());
         FFmpegStream stream = probeResult.getStreams().get(0);
