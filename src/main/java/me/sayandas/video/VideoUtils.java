@@ -18,7 +18,7 @@ public class VideoUtils {
     public static void generateVideo(Path videoFile, int width, int height) throws IOException {
         FFprobe fFprobe = new FFprobe();
         System.out.println("Successfully loaded ffprobe");
-        String ffmpegPath = System.getenv("ffmpeg-layer-path");
+        String ffmpegPath = System.getenv("ffmpeg_layer_path");
         log.finer("Env variable ffmpeg-layer-path: " + ffmpegPath);
         FFmpeg fFmpeg = new FFmpeg(ffmpegPath);
         System.out.println("Successfully loaded ffmpeg");
@@ -45,7 +45,7 @@ public class VideoUtils {
     }
 
     public static VideoResolutionProbeResult getVideoResolution(String videoFilePath) throws IOException {
-        String ffprobePath = System.getenv("ffprobe-layer-path");
+        String ffprobePath = System.getenv("ffprobe_layer_path");
         log.finer("Env variable ffprobe-layer-path: " + ffprobePath);
         FFprobe ffprobe = new FFprobe("/opt/ffprobe-layer/bin/ffprobe");
         FFmpegProbeResult probeResult = ffprobe.probe(videoFilePath);
