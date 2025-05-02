@@ -1,15 +1,10 @@
 package me.sayandas;
 
+import me.sayandas.video.VideoResolutionProbeResult;
+import me.sayandas.video.VideoUtils;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Properties;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Hello world!
@@ -29,6 +24,7 @@ public class App
 //        System.out.println("JDBC Drivers: " + DriverManager.drivers().collect(Collectors.toList()));
 //        Connection dbConn = DriverManager.getConnection(
 //                "jdbc:mysql://videoprocessing-db.c4xok8sm2nsh.us-east-1.rds.amazonaws.com:3306", dbConnProps);
-
+            String videoFilePath = "C:\\Users\\sayan\\Videos\\Captures\\output.mp4";
+        VideoResolutionProbeResult res = VideoUtils.getVideoResolution(videoFilePath);
     }
 }

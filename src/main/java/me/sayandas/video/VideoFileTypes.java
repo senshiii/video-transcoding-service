@@ -1,4 +1,4 @@
-package me.sayandas;
+package me.sayandas.video;
 
 public enum VideoFileTypes {
 

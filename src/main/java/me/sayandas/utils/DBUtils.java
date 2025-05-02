@@ -1,4 +1,4 @@
-package me.sayandas;
+package me.sayandas.utils;
 
 import java.sql.*;
 import java.util.Map;
