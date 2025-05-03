@@ -42,7 +42,7 @@ public class TaskQueueingHandler implements RequestHandler<S3Event, Boolean> {
         System.out.println("record = " + record);
 
         try {
-            byte[] videoData = S3Utils.readObjectAsBytes(bucket.getName(), entity.getKey());
+            byte[] videoData = S3Utils.readObjectAsBytes(bucket.getName(), entity.getUrlDecodedKey());
             String tempFileName = bucket.getName() + "_" + entity.getKey();
             File downloadedVideoFile = File.createTempFile(tempFileName, ".mp4");
             OutputStream os = new FileOutputStream(downloadedVideoFile);

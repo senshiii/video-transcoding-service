@@ -9,29 +9,45 @@ import net.bramp.ffmpeg.probe.FFmpegStream;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class VideoUtils {
 
+    private static FFprobe ffprobe = null;
+    private static FFmpeg ffmpeg = null;
     private static Logger log = Logger.getLogger(VideoUtils.class.getName());
 
+
+    static {
+        ConsoleHandler ch = new ConsoleHandler();
+        ch.setLevel(Level.ALL);
+        log.addHandler(ch);
+        log.setLevel(Level.ALL);
+        try {
+            String ffmpegPath = System.getenv("ffmpeg_layer_path"), ffprobePath = System.getenv("ffprobe_layer_path");
+            System.out.println("ffmpegPath = " + ffmpegPath);
+            System.out.println("ffprobePath = " + ffprobePath);
+            log.finest("Ffmpeg location (from env): " + ffmpegPath);
+            log.finest("FFprobe location (from env): " + ffprobePath);
+            ffmpeg = new FFmpeg(ffmpegPath);
+            log.fine("Successfully loaded ffmpeg");
+            ffprobe = new FFprobe(ffprobePath);
+            log.fine("Successfully loaded ffprobe");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static void generateVideo(Path videoFile, int width, int height) throws IOException {
-        FFprobe fFprobe = new FFprobe();
-        System.out.println("Successfully loaded ffprobe");
-        String ffmpegPath = System.getenv("ffmpeg_layer_path");
-        log.finer("Env variable ffmpeg-layer-path: " + ffmpegPath);
-        FFmpeg fFmpeg = new FFmpeg(ffmpegPath);
-        System.out.println("Successfully loaded ffmpeg");
-
         System.out.println("videoFile = " + videoFile);
-
         String sourceFileName = videoFile.getFileName().toString();
         String fileNameWithoutExt = sourceFileName.substring(0, sourceFileName.lastIndexOf("."));
         String outputFileName = fileNameWithoutExt + "_output_" + width + "_" + height;
         outputFileName = outputFileName + sourceFileName.substring(sourceFileName.lastIndexOf("."));
         Path outputVideoFile = videoFile.getParent().resolve(outputFileName);
         System.out.println("outputVideoFile = " + outputVideoFile);
-
         FFmpegBuilder ffmpegBuilder = new FFmpegBuilder()
                 .setInput(videoFile.toString())
                 .addOutput(outputVideoFile.toString())
@@ -40,17 +56,12 @@ public class VideoUtils {
                 .setVideoFrameRate(30D)
                 .done();
 
-        FFmpegExecutor executor = new FFmpegExecutor(fFmpeg, fFprobe);
+        FFmpegExecutor executor = new FFmpegExecutor(ffmpeg, ffprobe);
         executor.createJob(ffmpegBuilder).run();
     }
 
     public static VideoResolutionProbeResult getVideoResolution(String videoFilePath) throws IOException {
-        String ffprobePath = System.getenv("ffprobe_layer_path");
-        log.finer("Env variable ffprobe-layer-path: " + ffprobePath);
-        FFprobe ffprobe = new FFprobe(ffprobePath);
-        log.fine("Successfully loaded ffprobe");
         FFmpegProbeResult probeResult = ffprobe.probe(videoFilePath);
-        System.out.println(probeResult.getStreams());
         FFmpegStream stream = probeResult.getStreams().get(0);
         System.out.println("stream.width = " + stream.width);
         System.out.println("stream.height = " + stream.height);
