@@ -41,16 +41,18 @@ public class TaskQueueingHandler implements RequestHandler<S3Event, Boolean> {
         log.finest("entity.getSizeAsLong() = " + entity.getSizeAsLong());
         log.finest("record = " + record);
 
-        String queueName = System.getenv("transcoder-queue");
-
+        String queueName = System.getenv("transcoder_queue");
+        String bucketName = bucket.getName();
+        String s3ObjectKey = entity.getUrlDecodedKey();
         try {
             log.finest("Reading file as bytes form S3 | Start");
-            byte[] videoData = S3Utils.readObjectAsBytes(bucket.getName(), entity.getUrlDecodedKey());
-            String tempFileName = bucket.getName() + "_" + entity.getKey();
+            byte[] videoData = S3Utils.readObjectAsBytes(bucketName, s3ObjectKey);
+            String tempFileName = bucketName + "_" + s3ObjectKey;
             File downloadedVideoFile = File.createTempFile(tempFileName, ".mp4");
             OutputStream os = new FileOutputStream(downloadedVideoFile);
             os.write(videoData);
             log.finest("Reading file as bytes form S3 | Complete");
+
             VideoResolutionProbeResult resolutionProbeResult = VideoUtils.getVideoResolution(downloadedVideoFile.getAbsolutePath());
             List<VideoResolution> lowerResolutions = VideoResolution.fetchAllResolutionsBelow(VideoResolution.from(
                     resolutionProbeResult.width(),
@@ -59,7 +61,7 @@ public class TaskQueueingHandler implements RequestHandler<S3Event, Boolean> {
             log.finest("List of target resolutions: " + lowerResolutions);
             log.finest("Publishing to queue: " + queueName);
             for(VideoResolution vidRes: lowerResolutions){
-                QueueMessageBody messageBody = new QueueMessageBody(entity.getKey(), bucket.getName(), vidRes);
+                QueueMessageBody messageBody = new QueueMessageBody(s3ObjectKey, bucketName, vidRes);
                 String strJsonMessageBody = om.writeValueAsString(messageBody);
                 log.finer("Posting JSON Message Body: " + strJsonMessageBody + " to queue: " + queueName);
                 SQSUtil.enqueueMessage(queueName, strJsonMessageBody);
