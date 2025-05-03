@@ -7,10 +7,12 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 public class S3Utils {
 
     private static S3Client s3Client;
+    private static Logger logger = LogUtils.getLoggerWithConsoleHandler(S3Utils.class.getName());
 
     static{
         s3Client = S3Client.builder().region(Region.US_EAST_1).build();

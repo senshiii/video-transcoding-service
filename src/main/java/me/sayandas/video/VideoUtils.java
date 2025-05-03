@@ -1,5 +1,6 @@
 package me.sayandas.video;
 
+import me.sayandas.utils.LogUtils;
 import net.bramp.ffmpeg.FFmpeg;
 import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.FFprobe;
@@ -17,14 +18,9 @@ public class VideoUtils {
 
     private static FFprobe ffprobe = null;
     private static FFmpeg ffmpeg = null;
-    private static Logger log = Logger.getLogger(VideoUtils.class.getName());
-
+    private static Logger log = LogUtils.getLoggerWithConsoleHandler(VideoUtils.class.getName());
 
     static {
-        ConsoleHandler ch = new ConsoleHandler();
-        ch.setLevel(Level.ALL);
-        log.addHandler(ch);
-        log.setLevel(Level.ALL);
         try {
             String ffmpegPath = System.getenv("ffmpeg_layer_path"), ffprobePath = System.getenv("ffprobe_layer_path");
             System.out.println("ffmpegPath = " + ffmpegPath);
