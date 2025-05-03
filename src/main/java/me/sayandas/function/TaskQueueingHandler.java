@@ -41,23 +41,27 @@ public class TaskQueueingHandler implements RequestHandler<S3Event, Boolean> {
         System.out.println("entity.getSizeAsLong() = " + entity.getSizeAsLong());
         System.out.println("record = " + record);
 
+        String queueName = System.getenv("transcoder-queue");
+
         try {
+            log.finest("Reading file as bytes form S3 | Start");
             byte[] videoData = S3Utils.readObjectAsBytes(bucket.getName(), entity.getUrlDecodedKey());
             String tempFileName = bucket.getName() + "_" + entity.getKey();
             File downloadedVideoFile = File.createTempFile(tempFileName, ".mp4");
             OutputStream os = new FileOutputStream(downloadedVideoFile);
             os.write(videoData);
+            log.finest("Reading file as bytes form S3 | Complete");
             VideoResolutionProbeResult resolutionProbeResult = VideoUtils.getVideoResolution(downloadedVideoFile.getAbsolutePath());
             List<VideoResolution> lowerResolutions = VideoResolution.fetchAllResolutionsBelow(VideoResolution.from(
                     resolutionProbeResult.width(),
                     resolutionProbeResult.height()
             ));
+            log.finest("List of target resolutions: " + lowerResolutions);
+            log.finest("Publishing to queue: " + queueName);
             for(VideoResolution vidRes: lowerResolutions){
-                String queueName = System.getenv("transcoder-queue");
-                log.finest("Publishing to queue: " + queueName);
                 QueueMessageBody messageBody = new QueueMessageBody(entity.getKey(), bucket.getName(), vidRes);
                 String strJsonMessageBody = om.writeValueAsString(messageBody);
-                log.finer("JSON Message Body: " + strJsonMessageBody);
+                log.finer("Posting JSON Message Body: " + strJsonMessageBody + " to queue: " + queueName);
                 SQSUtil.enqueueMessage(queueName, strJsonMessageBody);
             }
             os.close();
