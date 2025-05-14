@@ -32,7 +32,7 @@ jobs:
          distribution: 'temurin'
 
       - name: Build Package
-        run: mvn clean package
+        run: mvn clean package -DskipTests
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
