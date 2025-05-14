@@ -23,10 +23,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Logger;
 
 public class TaskQueueingHandler implements RequestHandler<S3Event, Boolean> {
@@ -81,6 +78,9 @@ public class TaskQueueingHandler implements RequestHandler<S3Event, Boolean> {
                     resolutionProbeResult.width(),
                     resolutionProbeResult.height()
             ));
+            Map<VideoResolution, String> transcodedVersions = new HashMap<>();
+            lowerResolutions.forEach(res -> transcodedVersions.put(res, ""));
+
             log.finest("List of target resolutions: " + lowerResolutions);
 
             // Insert row for media video table
@@ -89,6 +89,7 @@ public class TaskQueueingHandler implements RequestHandler<S3Event, Boolean> {
             mediaVideRepo.insert(MediaVideo.builder()
                     .mediaId(mediaId)
                     .url(S3Utils.getObjectUrl(s3ObjectKey, bucketName))
+                    .transcodedVersions(transcodedVersions)
                     .build());
             log.finer("Record for media inserted successfully in DB");
 
