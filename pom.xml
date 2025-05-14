@@ -34,6 +34,13 @@
       <version>0.8.0</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.18.38</version>
+      <scope>provided</scope>
+    </dependency>
+
     <!--   AWS Dependencies  -->
     <dependency>
       <groupId>com.amazonaws</groupId>

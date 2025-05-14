@@ -2,11 +2,10 @@ package me.sayandas.utils;
 
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
-import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
-import software.amazon.awssdk.services.sqs.model.GetQueueUrlResponse;
-import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
+import software.amazon.awssdk.services.sqs.model.*;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class SQSUtil {
@@ -21,11 +20,11 @@ public class SQSUtil {
         }
     }
 
-    public static void enqueueMessage(String queueName, String messageBody){
-        SQSUtil.enqueueMessage(queueName, messageBody, Collections.emptyMap());
+    public static String enqueueMessage(String queueName, String messageBody){
+        return SQSUtil.enqueueMessage(queueName, messageBody, Collections.emptyMap());
     }
 
-    public static void enqueueMessage(String queueName,
+    public static String enqueueMessage(String queueName,
                                       String messageBody, Map<String, String> messageAttributes){
         String queueURL;
         try {
@@ -34,11 +33,14 @@ public class SQSUtil {
                     .build();
             GetQueueUrlResponse queueUrlResponse = sqsClient.getQueueUrl(getQueueUrlRequest);
             queueURL = queueUrlResponse.queueUrl();
+
             SendMessageRequest sendMsgRequest = SendMessageRequest.builder()
                     .messageBody(messageBody)
                     .queueUrl(queueURL)
                     .build();
-            sqsClient.sendMessage(sendMsgRequest);
+
+            SendMessageResponse res = sqsClient.sendMessage(sendMsgRequest);
+            return res.messageId();
         }catch(Exception e){
             throw new RuntimeException("Error occurred when publishing message to queue", e);
         }
