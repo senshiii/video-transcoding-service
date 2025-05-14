@@ -21,7 +21,7 @@ public class MediaVideoRepository {
 
     private Connection conn;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final Logger logger = LogUtils.getLoggerWithConsoleHandler(this.getClass().getName());
+    private final Logger log = LogUtils.getLoggerWithConsoleHandler(this.getClass().getName());
     private static MediaVideoRepository mediaVideoRepository = null;
 
     private MediaVideoRepository(){}
@@ -48,6 +48,7 @@ public class MediaVideoRepository {
             pStat.setObject(3, objectMapper.writeValueAsString(mediaVideo.getTranscodedVersions()));
             pStat.execute();
         }catch(SQLException e){
+            log.severe(LogUtils.getFullErrorMessage("Error occurred during insert for table MEDIA_VIDEO", e));
             throw new RuntimeException("Exception occurred when inserting media video", e);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -65,7 +66,7 @@ public class MediaVideoRepository {
             return this.convertResultSetToObject(rs).get(0);
         }
         catch(Exception e){
-            logger.severe("Exception occurred when fetching Media Video: " + e.getMessage());
+            log.severe(LogUtils.getFullErrorMessage("Error occurred during fetch for table MEDIA_VIDEO", e));
             throw new RuntimeException("Exception occurred when fetching Media Video", e);
         }
     }

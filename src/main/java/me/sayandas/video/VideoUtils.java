@@ -59,13 +59,13 @@ public class VideoUtils {
     public static VideoResolutionProbeResult getVideoResolution(String videoFilePath) throws IOException {
         FFmpegProbeResult probeResult = ffprobe.probe(videoFilePath);
         FFmpegStream stream = probeResult.getStreams().get(0);
-        System.out.println("stream.width = " + stream.width);
-        System.out.println("stream.height = " + stream.height);
-        System.out.println("stream.codec_name = " + stream.codec_name);
-        System.out.println("stream.codec_type = " + stream.codec_type);
-        System.out.println("stream.bit_rate = " + stream.bit_rate);
-        System.out.println("stream.duration = " + stream.duration);
-        System.out.println("stream.duration_ts = " + stream.duration_ts);
+//        System.out.println("stream.width = " + stream.width);
+//        System.out.println("stream.height = " + stream.height);
+//        System.out.println("stream.codec_name = " + stream.codec_name);
+//        System.out.println("stream.codec_type = " + stream.codec_type);
+//        System.out.println("stream.bit_rate = " + stream.bit_rate);
+//        System.out.println("stream.duration = " + stream.duration);
+//        System.out.println("stream.duration_ts = " + stream.duration_ts);
         return new VideoResolutionProbeResult(stream.width, stream.height);
     }
 

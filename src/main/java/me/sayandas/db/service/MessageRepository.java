@@ -40,7 +40,7 @@ public class MessageRepository {
             return this.convertResultSetToObject(rs).get(0);
         }
         catch(Exception e){
-            log.severe("Exception occurred when fetching Media Video: " + e.getMessage());
+            log.severe(LogUtils.getFullErrorMessage("Error occurred during fetch for table MESSAGE", e));
             throw new RuntimeException("Exception occurred when fetching Media Video", e);
         }
     }
@@ -57,6 +57,7 @@ public class MessageRepository {
             pStat.executeBatch();
             connection.commit();
         }catch(SQLException e){
+            log.severe(LogUtils.getFullErrorMessage("Error occurred during bulk insert for table MESSAGE", e));
             throw new RuntimeException("Error occurred when inserting messages in bulk", e);
         }finally{
             connection.setAutoCommit(true);
