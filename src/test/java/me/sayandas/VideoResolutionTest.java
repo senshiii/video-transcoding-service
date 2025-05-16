@@ -15,6 +15,7 @@ public class VideoResolutionTest {
 
 
     @Test
+    // TODO: Rewrite test
     public void givenExactResolution_ShouldReturnAllLowerResolutions(){
         // arrange
         List<VideoResolution> expectedBelow144 = List.of();
@@ -27,14 +28,14 @@ public class VideoResolutionTest {
         List<VideoResolution> expectedBelow2160 = new ArrayList<>(expectedBelow1440); expectedBelow2160.add(VideoResolution.RES_1440p);
 
         // act
-        List<VideoResolution> actualBelow144 = VideoResolution.fetchAllResolutionsBelow(VideoResolution.RES_144p);
-        List<VideoResolution> actualBelow240 = VideoResolution.fetchAllResolutionsBelow(VideoResolution.RES_240p);
-        List<VideoResolution> actualBelow360 = VideoResolution.fetchAllResolutionsBelow(VideoResolution.RES_360p);
-        List<VideoResolution> actualBelow480 = VideoResolution.fetchAllResolutionsBelow(VideoResolution.RES_480p);
-        List<VideoResolution> actualBelow720 = VideoResolution.fetchAllResolutionsBelow(VideoResolution.RES_720p);
-        List<VideoResolution> actualBelow1080 = VideoResolution.fetchAllResolutionsBelow(VideoResolution.RES_1080p);
-        List<VideoResolution> actualBelow1440 = VideoResolution.fetchAllResolutionsBelow(VideoResolution.RES_1440p);
-        List<VideoResolution> actualBelow2160 = VideoResolution.fetchAllResolutionsBelow(VideoResolution.RES_2160p);
+        List<VideoResolution> actualBelow144 = VideoResolution.getTargetResolutions(VideoResolution.RES_144p);
+        List<VideoResolution> actualBelow240 = VideoResolution.getTargetResolutions(VideoResolution.RES_240p);
+        List<VideoResolution> actualBelow360 = VideoResolution.getTargetResolutions(VideoResolution.RES_360p);
+        List<VideoResolution> actualBelow480 = VideoResolution.getTargetResolutions(VideoResolution.RES_480p);
+        List<VideoResolution> actualBelow720 = VideoResolution.getTargetResolutions(VideoResolution.RES_720p);
+        List<VideoResolution> actualBelow1080 = VideoResolution.getTargetResolutions(VideoResolution.RES_1080p);
+        List<VideoResolution> actualBelow1440 = VideoResolution.getTargetResolutions(VideoResolution.RES_1440p);
+        List<VideoResolution> actualBelow2160 = VideoResolution.getTargetResolutions(VideoResolution.RES_2160p);
 
         // assert
         assertEquals(expectedBelow144, actualBelow144);
@@ -45,6 +46,12 @@ public class VideoResolutionTest {
         assertEquals(expectedBelow1080, actualBelow1080);
         assertEquals(expectedBelow1440, actualBelow1440);
         assertEquals(expectedBelow2160, actualBelow2160);
+    }
+
+    @Test
+    public void givenUnknownResolution_shouldReturnAllLowerStandardResolutions(){
+        List<VideoResolution> res = VideoResolution.getTargetResolutions(1200, 1000);
+
     }
 
 }

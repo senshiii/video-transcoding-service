@@ -23,8 +23,6 @@ public class VideoUtils {
     static {
         try {
             String ffmpegPath = System.getenv("ffmpeg_layer_path"), ffprobePath = System.getenv("ffprobe_layer_path");
-            System.out.println("ffmpegPath = " + ffmpegPath);
-            System.out.println("ffprobePath = " + ffprobePath);
             log.finest("Ffmpeg location (from env): " + ffmpegPath);
             log.finest("FFprobe location (from env): " + ffprobePath);
             ffmpeg = new FFmpeg(ffmpegPath);

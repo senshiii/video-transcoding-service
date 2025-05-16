@@ -32,7 +32,8 @@ public class TaskQueueingHandler implements RequestHandler<S3Event, Boolean> {
     private final String ENV_VAR_DB_JDBC_URL = "db_jdbc_url";
     private final String ENV_VAR_DB_JDBC_USERNAME = "db_jdbc_username";
     private final String ENV_VAR_DB_JDBC_PASSWORD = "db_jdbc_password";
-
+    private MediaVideoRepository mediaVideoRepository = MediaVideoRepository.getInstance();
+    private MessageRepository messageRepository = MessageRepository.getInstance();
     private final ObjectMapper om = new ObjectMapper();
     private final Logger log = LogUtils.getLoggerWithConsoleHandler(this.getClass().getName());
 
@@ -62,11 +63,8 @@ public class TaskQueueingHandler implements RequestHandler<S3Event, Boolean> {
             log.finest("Extracted data from S3 event: Object Key: " + s3ObjectKey + ". Bucket: " + bucketName);
 
             // Acquire repository objects
-            MediaVideoRepository mediaVideRepo = MediaVideoRepository.getInstance();
-            mediaVideRepo.setConnection(connection);
-
-            MessageRepository messageRepo = MessageRepository.getInstance();
-            messageRepo.setConnection(connection);
+            mediaVideoRepository.setConnection(connection);
+            messageRepository.setConnection(connection);
 
             String downloadedS3VideoFile = this.downloadS3File(s3ObjectKey, bucketName);
             log.finest("Downloaded file from S3 to file location: " + downloadedS3VideoFile);
@@ -74,7 +72,7 @@ public class TaskQueueingHandler implements RequestHandler<S3Event, Boolean> {
             VideoResolutionProbeResult resolutionProbeResult = VideoUtils.getVideoResolution(downloadedS3VideoFile);
             log.finest("FFProbe completed. Resolution of input video: " + resolutionProbeResult);
 
-            List<VideoResolution> lowerResolutions = VideoResolution.fetchAllResolutionsBelow(VideoResolution.from(
+            List<VideoResolution> lowerResolutions = VideoResolution.getTargetResolutions(VideoResolution.from(
                     resolutionProbeResult.width(),
                     resolutionProbeResult.height()
             ));
@@ -86,7 +84,7 @@ public class TaskQueueingHandler implements RequestHandler<S3Event, Boolean> {
             // Insert row for media video table
             log.finer("Inserting record for media in DB");
             String mediaId = UUID.randomUUID().toString();
-            mediaVideRepo.insert(MediaVideo.builder()
+            mediaVideoRepository.insert(MediaVideo.builder()
                     .mediaId(mediaId)
                     .url(S3Utils.getObjectUrl(s3ObjectKey, bucketName))
                     .transcodedVersions(transcodedVersions)
@@ -97,8 +95,7 @@ public class TaskQueueingHandler implements RequestHandler<S3Event, Boolean> {
             List<Message> messages = new ArrayList<>();
 
             for(VideoResolution targetRes: lowerResolutions){
-                QueueMessageBody messageBody = new QueueMessageBody(s3ObjectKey, bucketName, targetRes);
-                String strJsonMessageBody = om.writeValueAsString(messageBody);
+                String strJsonMessageBody = om.writeValueAsString( new QueueMessageBody(s3ObjectKey, bucketName, targetRes));
                 log.finer("Enqueueing JSON Message Body: " + strJsonMessageBody + " to queue: " + queueName);
                 String messageId = SQSUtil.enqueueMessage(queueName, strJsonMessageBody);
                 log.finer("Successfully enqueued message. Message Id = " + messageId);
@@ -109,7 +106,7 @@ public class TaskQueueingHandler implements RequestHandler<S3Event, Boolean> {
 
             log.finer("Inserting record for messages in DB");
             // Insert row(s) for message table
-            messageRepo.insertBulk(messages);
+            messageRepository.insertBulk(messages);
             log.finer("Successfully inserted record for messages in DB");
 
         } catch(Exception e){

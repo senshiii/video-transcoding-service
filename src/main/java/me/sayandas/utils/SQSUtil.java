@@ -5,7 +5,7 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.*;
 
 import java.util.Collections;
-import java.util.List;
+
 import java.util.Map;
 
 public class SQSUtil {

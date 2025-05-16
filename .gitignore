@@ -4,6 +4,7 @@ target/
 !**/src/test/**/target/
 ffmepg-layer/bin/**
 src/main/resources/*.properties
+src/main/java/me/sayandas/App.java
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
