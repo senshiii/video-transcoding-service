@@ -42,11 +42,11 @@ public class MediaVideoRepository {
 
     public void insert(MediaVideo mediaVideo) throws Exception{
         final String insertQuery = "INSERT INTO MEDIA_VIDEO (MEDIA_ID, ORIGINAL_VIDEO_LOCATION, TRANSCODED_VERSIONS) VALUES (?, ?, ?)";
-        try(PreparedStatement pStat = conn.prepareStatement(insertQuery)){
-            pStat.setString(1, mediaVideo.getMediaId());
-            pStat.setString(2, mediaVideo.getUrl());
-            pStat.setObject(3, objectMapper.writeValueAsString(mediaVideo.getTranscodedVersions()));
-            pStat.execute();
+        try(PreparedStatement ps = conn.prepareStatement(insertQuery)){
+            ps.setString(1, mediaVideo.getMediaId());
+            ps.setString(2, mediaVideo.getUrl());
+            ps.setObject(3, objectMapper.writeValueAsString(mediaVideo.getTranscodedVersions()));
+            ps.execute();
         }catch(SQLException e){
             log.severe(LogUtils.getFullErrorMessage("Error occurred during insert for table MEDIA_VIDEO", e));
             throw new RuntimeException("Exception occurred when inserting media video", e);
@@ -60,9 +60,9 @@ public class MediaVideoRepository {
 
     public MediaVideo fetchById(String id) throws Exception{
         final String fetchQuery = "SELECT * FROM MEDIA_VIDEO WHERE MEDIA_ID = (?)";
-        try(PreparedStatement pStat = conn.prepareStatement(fetchQuery)){
-            pStat.setString(1, id);
-            ResultSet rs = pStat.executeQuery();
+        try(PreparedStatement ps = conn.prepareStatement(fetchQuery)){
+            ps.setString(1, id);
+            ResultSet rs = ps.executeQuery();
             return this.convertResultSetToObject(rs).get(0);
         }
         catch(Exception e){
@@ -70,6 +70,20 @@ public class MediaVideoRepository {
             throw new RuntimeException("Exception occurred when fetching Media Video", e);
         }
     }
+
+    public int updateTranscodedVersionsJsonById(String id, VideoResolution key, String value){
+        String sql = "UPDATE MEDIA_VIDEO SET TRANSCODED_VERSIONS = JSON_SET(TRANSCODED_VERSIONS, (?), (?)) WHERE MEDIA_ID = (?)";
+        try(PreparedStatement ps = conn.prepareStatement(sql)){
+            ps.setString(1, "$." + key.toString());
+            ps.setString(2, value);
+            ps.setString(3, id);
+            return ps.executeUpdate();
+        }catch(SQLException e){
+            log.severe(LogUtils.getFullErrorMessage("Error occured when updaing JSON key for table MEDIA_VIDEO", e));
+        }
+        return 0;
+    }
+
 
     private List<MediaVideo> convertResultSetToObject(ResultSet rs) throws SQLException, JsonProcessingException {
         List<MediaVideo> mediaVideos = new ArrayList<>();

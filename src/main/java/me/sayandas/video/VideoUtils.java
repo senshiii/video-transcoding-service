@@ -34,19 +34,13 @@ public class VideoUtils {
         }
     }
 
-    public static void generateVideo(Path videoFile, int width, int height) throws IOException {
+    public static void generateVideo(Path videoFile, Path outputFile, VideoResolution resolution) throws IOException {
         System.out.println("videoFile = " + videoFile);
-        String sourceFileName = videoFile.getFileName().toString();
-        String fileNameWithoutExt = sourceFileName.substring(0, sourceFileName.lastIndexOf("."));
-        String outputFileName = fileNameWithoutExt + "_output_" + width + "_" + height;
-        outputFileName = outputFileName + sourceFileName.substring(sourceFileName.lastIndexOf("."));
-        Path outputVideoFile = videoFile.getParent().resolve(outputFileName);
-        System.out.println("outputVideoFile = " + outputVideoFile);
         FFmpegBuilder ffmpegBuilder = new FFmpegBuilder()
                 .setInput(videoFile.toString())
-                .addOutput(outputVideoFile.toString())
+                .addOutput(outputFile.toString())
                 .setFormat("mp4")
-                .setVideoResolution(width, height)
+                .setVideoResolution(resolution.getWidth(), resolution.getHeight())
                 .setVideoFrameRate(30D)
                 .done();
 

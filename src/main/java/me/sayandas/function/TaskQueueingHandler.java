@@ -17,10 +17,6 @@ import me.sayandas.video.VideoResolution;
 import me.sayandas.video.VideoResolutionProbeResult;
 import me.sayandas.video.VideoUtils;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.*;
@@ -66,7 +62,7 @@ public class TaskQueueingHandler implements RequestHandler<S3Event, Boolean> {
             mediaVideoRepository.setConnection(connection);
             messageRepository.setConnection(connection);
 
-            String downloadedS3VideoFile = this.downloadS3File(s3ObjectKey, bucketName);
+            String downloadedS3VideoFile = S3Utils.downloadFile(s3ObjectKey, bucketName).getAbsolutePath();
             log.finest("Downloaded file from S3 to file location: " + downloadedS3VideoFile);
 
             VideoResolutionProbeResult resolutionProbeResult = VideoUtils.getVideoResolution(downloadedS3VideoFile);
@@ -113,17 +109,5 @@ public class TaskQueueingHandler implements RequestHandler<S3Event, Boolean> {
             log.severe("Exception occurred when processing message: " + e.getMessage());
         }
         return null;
-    }
-
-    public String downloadS3File(String s3ObjectKey, String s3BucketName) throws IOException {
-        log.entering(this.getClass().getName(), "downloadS3File");
-        byte[] videoData = S3Utils.readObjectAsBytes(s3BucketName, s3ObjectKey);
-        String tempFileName = s3BucketName + "_" + s3ObjectKey;
-        File downloadedVideoFile = File.createTempFile(tempFileName, ".mp4");
-        OutputStream os = new FileOutputStream(downloadedVideoFile);
-        os.write(videoData);
-        os.close();
-        log.exiting(this.getClass().getName(), "downloadS3File");
-        return downloadedVideoFile.getAbsolutePath();
     }
 }

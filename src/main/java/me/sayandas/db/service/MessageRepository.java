@@ -31,11 +31,10 @@ public class MessageRepository {
         this.connection = conn;
     }
 
-    public Message fetchById(String messageId, String mediaId){
-        final String fetchQuery = "SELECT * FROM MESSAGE WHERE MESSAGE_ID = (?) AND MEDIA_ID = (?)";
+    public Message fetchById(String messageId){
+        final String fetchQuery = "SELECT * FROM MESSAGE WHERE MESSAGE_ID = (?)";
         try(PreparedStatement pStat = connection.prepareStatement(fetchQuery)){
             pStat.setString(1, messageId);
-            pStat.setString(2, mediaId);
             ResultSet rs = pStat.executeQuery();
             return this.convertResultSetToObject(rs).get(0);
         }

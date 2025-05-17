@@ -107,4 +107,19 @@ public class MessageVideoRepositoryTest {
 
     }
 
+    @Test
+    public void shouldUpdateJSON() throws Exception{
+        // arrange
+        MediaVideoRepository mediaVideoRepository = MediaVideoRepository.getInstance();
+        mediaVideoRepository.setConnection(connection);
+        String value = "Updated Value";
+        // act
+        int rowsAffected = mediaVideoRepository.updateTranscodedVersionsJsonById(testDataMedaId, VideoResolution.RES_1080p, value);
+        // assert
+        MediaVideo m = mediaVideoRepository.fetchById(testDataMedaId);
+        assertEquals(1, rowsAffected);
+        assertNotNull(m.getTranscodedVersions().get(VideoResolution.RES_1080p));
+        assertEquals(m.getTranscodedVersions().get(VideoResolution.RES_1080p), value);
+    }
+
 }

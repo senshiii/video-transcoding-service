@@ -77,7 +77,7 @@ public class MessageRepositoryTest {
         MessageRepository rep = MessageRepository.getInstance();
         rep.setConnection(connection);
         // act
-        Message m = rep.fetchById(testDataMessageId, testDataMediaId);
+        Message m = rep.fetchById(testDataMessageId);
         log.fine("Message object fetched from DB: " + m);
         // assert
         assertEquals(testDataMediaId, m.getMediaId());
@@ -98,7 +98,7 @@ public class MessageRepositoryTest {
                 .build();
         rep.insertBulk(List.of(m));
         // assert
-        Message actualMessage = rep.fetchById(messageId, testDataMediaId);
+        Message actualMessage = rep.fetchById(messageId);
         log.fine("Message object inserted in DB: " + actualMessage);
         assertEquals(actualMessage.getMessageId(), messageId);
         assertEquals(actualMessage.getMediaId(), testDataMediaId);

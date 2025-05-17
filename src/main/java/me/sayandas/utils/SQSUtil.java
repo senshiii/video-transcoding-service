@@ -20,7 +20,7 @@ public class SQSUtil {
         }
     }
 
-    public static String enqueueMessage(String queueName, String messageBody){
+    public static String enqueueMessage(String queueName, String messageBody) {
         return SQSUtil.enqueueMessage(queueName, messageBody, Collections.emptyMap());
     }
 
@@ -28,22 +28,35 @@ public class SQSUtil {
                                       String messageBody, Map<String, String> messageAttributes){
         String queueURL;
         try {
-            GetQueueUrlRequest getQueueUrlRequest = GetQueueUrlRequest.builder()
-                    .queueName(queueName)
-                    .build();
-            GetQueueUrlResponse queueUrlResponse = sqsClient.getQueueUrl(getQueueUrlRequest);
-            queueURL = queueUrlResponse.queueUrl();
-
+            queueURL = getQueueUrl(queueName).queueUrl();
             SendMessageRequest sendMsgRequest = SendMessageRequest.builder()
                     .messageBody(messageBody)
                     .queueUrl(queueURL)
                     .build();
-
             SendMessageResponse res = sqsClient.sendMessage(sendMsgRequest);
             return res.messageId();
         }catch(Exception e){
             throw new RuntimeException("Error occurred when publishing message to queue", e);
         }
+    }
+
+    public static GetQueueUrlResponse getQueueUrl(String queueName){
+        GetQueueUrlRequest getQueueUrlRequest = GetQueueUrlRequest.builder()
+                .queueName(queueName)
+                .build();
+        return sqsClient.getQueueUrl(getQueueUrlRequest);
+
+    }
+
+    public static boolean deleteMessage(String queueName, String receiptHandle) {
+        GetQueueUrlRequest queueUrlRequest = GetQueueUrlRequest.builder().queueName(queueName).build();
+        String queueUrl = getQueueUrl(queueName).queueUrl();
+        DeleteMessageRequest deleteMessageRequest = DeleteMessageRequest.builder()
+                .queueUrl(queueUrl)
+                .receiptHandle(receiptHandle)
+                .build();
+        sqsClient.deleteMessage(deleteMessageRequest);
+        return true;
     }
 
 }
