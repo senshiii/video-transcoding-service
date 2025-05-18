@@ -13,6 +13,5 @@ import java.util.Map;
 public class MediaVideo extends BaseEntity {
 
     private String mediaId;
-    private String url;
     private Map<VideoResolution, String> transcodedVersions;
 }

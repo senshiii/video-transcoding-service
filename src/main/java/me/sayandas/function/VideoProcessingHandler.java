@@ -72,7 +72,7 @@ public class VideoProcessingHandler implements RequestHandler<SQSEvent, Boolean>
            logger.fine("Generated output video. Location = " + outputFilePath);
 
            // Upload file to S3
-           String objectKey = dbMsgRow.getMediaId() + "_" + messageBody.targetResolution() + ".mp4";
+           String objectKey = dbMsgRow.getMediaId() + "/" + dbMsgRow.getMediaId() + "_" + messageBody.targetResolution() + ".mp4";
            S3Utils.uploadFile(objectKey, destinationBucket, p);
            String url = S3Utils.getObjectUrl(objectKey, destinationBucket);
 

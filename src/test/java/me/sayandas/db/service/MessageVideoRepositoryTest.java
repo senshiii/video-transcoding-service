@@ -93,7 +93,6 @@ public class MessageVideoRepositoryTest {
 
         MediaVideo m = MediaVideo.builder()
                 .mediaId(id)
-                .url(DUMMY_URL)
                 .transcodedVersions(transcodedVersions)
                 .build();
 
