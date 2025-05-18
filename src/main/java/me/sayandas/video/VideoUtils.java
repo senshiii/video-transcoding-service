@@ -1,5 +1,6 @@
 package me.sayandas.video;
 
+import me.sayandas.function.LambdaEnvVariables;
 import me.sayandas.utils.LogUtils;
 import net.bramp.ffmpeg.FFmpeg;
 import net.bramp.ffmpeg.FFmpegExecutor;
@@ -22,7 +23,8 @@ public class VideoUtils {
 
     static {
         try {
-            String ffmpegPath = System.getenv("ffmpeg_layer_path"), ffprobePath = System.getenv("ffprobe_layer_path");
+            String ffmpegPath = System.getenv(LambdaEnvVariables.FFMPEG_LAYER_PATH),
+                    ffprobePath = System.getenv(LambdaEnvVariables.FFPROBE_LAYER_PATH);
             log.finest("Ffmpeg location (from env): " + ffmpegPath);
             log.finest("FFprobe location (from env): " + ffprobePath);
             ffmpeg = new FFmpeg(ffmpegPath);
