@@ -3,7 +3,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 ffmepg-layer/bin/**
-src/main/resources/*.properties
+src/test/resources/*.properties
 src/main/java/me/sayandas/App.java
 
 ### IntelliJ IDEA ###

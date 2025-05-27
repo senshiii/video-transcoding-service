@@ -47,8 +47,10 @@ public class TaskQueueingHandler implements RequestHandler<S3Event, Boolean> {
                 }
         );
 
+        long preDBConnTime = System.currentTimeMillis();
         try(Connection connection = DriverManager.getConnection(dbUrl, dbUserName, dbPassword)){
-            log.fine("Established Database connection");
+            long postDBConnTime = System.currentTimeMillis();
+            log.fine("Established Database connection. Time taken to establish DB connection (in ms): " + (postDBConnTime - preDBConnTime));
             // Configure repository objects
             mediaVideoRepository.setConnection(connection);
             messageRepository.setConnection(connection);

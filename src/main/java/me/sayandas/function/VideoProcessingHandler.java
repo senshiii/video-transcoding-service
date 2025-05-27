@@ -45,7 +45,10 @@ public class VideoProcessingHandler implements RequestHandler<SQSEvent, Boolean>
                         throw new IllegalArgumentException("Environment variable " + val + " is not configured");
                 }
         );
+        long preDBConnTime = System.currentTimeMillis();
         try(Connection connection = DriverManager.getConnection(dbUrl, dbUserName, dbPassword)){
+            long postDBConnTime = System.currentTimeMillis();
+            logger.fine("Established Database connection. Time taken to establish DB connection (in ms): " + (postDBConnTime - preDBConnTime));
             mediaVideoRepository.setConnection(connection);
             messageRepository.setConnection(connection);
            QueueMessageBody messageBody = objectMapper.readValue(message.getBody(), QueueMessageBody.class);
