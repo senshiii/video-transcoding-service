@@ -7,9 +7,8 @@ import com.amazonaws.services.lambda.runtime.events.models.s3.S3EventNotificatio
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.sayandas.db.model.MediaVideo;
 import me.sayandas.db.model.Message;
-import me.sayandas.db.service.MediaVideoRepository;
-import me.sayandas.db.service.MessageRepository;
-import me.sayandas.model.queue.QueueMessageBody;
+import me.sayandas.db.repository.MediaVideoRepository;
+import me.sayandas.db.repository.MessageRepository;
 import me.sayandas.utils.LogUtils;
 import me.sayandas.utils.S3Utils;
 import me.sayandas.utils.SQSUtil;
@@ -37,10 +36,14 @@ public class TaskQueueingHandler implements RequestHandler<S3Event, Boolean> {
                 dbUrl = System.getenv(LambdaEnvVariables.DB_URL),
                 dbUserName = System.getenv(LambdaEnvVariables.DB_USERNAME),
                 dbPassword = System.getenv(LambdaEnvVariables.DB_PASSWORD);
+
         List.of(queueName, dbUrl, dbPassword, dbUserName).forEach(
                 val -> {
-                    if(Objects.isNull(val) || val.isBlank())
-                        throw new IllegalArgumentException("Environment variable " + val + " is not configured");
+                    if(Objects.isNull(val) || val.isBlank()){
+                        String errMsg = "Environment variable " + val + " is not configured";
+                        log.severe(errMsg);
+                        throw new IllegalArgumentException(errMsg);
+                    }
                 }
         );
 
@@ -98,9 +101,11 @@ public class TaskQueueingHandler implements RequestHandler<S3Event, Boolean> {
                 messageRepository.insertBulk(messages);
                 log.finer("Successfully inserted record for messages in DB");
             }
+
         } catch(Exception e){
-            log.severe(LogUtils.getFullErrorMessage("Error occurred when processing S3 event", e));
+            log.severe("Error occurred when processing S3 Event: " + LogUtils.getFullErrorMessage(e));
+            return false;
         }
-        return null;
+        return true;
     }
 }

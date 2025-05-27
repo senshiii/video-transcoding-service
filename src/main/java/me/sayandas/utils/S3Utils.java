@@ -34,15 +34,14 @@ public class S3Utils {
         return s3Client.utilities().getUrl(getUrlRequest).toExternalForm();
     }
 
-    public static File downloadFile(String s3ObjectKey, String s3BucketName) throws IOException {
+    public static File downloadFile(String s3ObjectKey, String s3BucketName) throws Exception {
         byte[] videoData = S3Utils.readObjectAsBytes(s3BucketName, s3ObjectKey);
         String tempFileName = s3BucketName + "_" + s3ObjectKey + UUID.randomUUID();
         File downloadedVideoFile = File.createTempFile(tempFileName, ".mp4");
         try(OutputStream os = new FileOutputStream(downloadedVideoFile)){
             os.write(videoData);
         }catch(IOException e){
-            log.severe(LogUtils.getFullErrorMessage("Error occurred when downloading file to temp location", e));
-            throw e;
+            LogUtils.logAndThrowException("Error occurred when downloading file to temp location", e, log);
         }
         return downloadedVideoFile;
     }

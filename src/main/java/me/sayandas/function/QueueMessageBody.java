@@ -1,4 +1,4 @@
-package me.sayandas.model.queue;
+package me.sayandas.function;
 
 import me.sayandas.video.VideoResolution;
 

@@ -21,10 +21,8 @@ public class LogUtils {
         return logger;
     }
 
-    public static String getFullErrorMessage(String messagePrefix, Exception e){
+    public static String getFullErrorMessage(Exception e){
         StringBuilder sb = new StringBuilder();
-        sb.append(messagePrefix);
-        sb.append(" ");
         sb.append(e.getMessage());
         if(Objects.nonNull(e.getCause())){
             sb.append("Inner Cause: ");
@@ -33,24 +31,28 @@ public class LogUtils {
         return sb.toString();
     }
 
-    public static String getFullErrorMessage(String messagePrefix, SQLException e){
+    public static String getFullErrorMessage(SQLException e){
         StringBuilder sb = new StringBuilder();
-        sb.append(messagePrefix)
-                . append(" - ")
-                .append("SQL State: ").append(e.getSQLState()).
-                append(e.getMessage());
-
+        sb.append("SQL State: ").append(e.getSQLState()).append(e.getMessage());
+        sb.append(" ");
         SQLException nextEx = e.getNextException();
         while(Objects.nonNull(nextEx)){
             sb.append(".").append(nextEx.getMessage());
+            nextEx = nextEx.getNextException();
         }
 
         if(Objects.nonNull(e.getCause())){
             sb.append("Inner Cause: ");
             sb.append(e.getMessage());
         }
-
         return sb.toString();
+    }
+
+    public static void logAndThrowException(String logMessagePrefix, Exception e, Logger logger)throws Exception{
+        String errorMessage = "";
+        if(e instanceof SQLException) errorMessage = getFullErrorMessage((SQLException) e) ;
+        else errorMessage = getFullErrorMessage(e);
+        logger.severe(logMessagePrefix + " " + errorMessage);
     }
 
 }

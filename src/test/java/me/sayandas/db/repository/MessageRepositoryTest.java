@@ -1,4 +1,4 @@
-package me.sayandas.db.service;
+package me.sayandas.db.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.sayandas.db.model.Message;
@@ -7,14 +7,16 @@ import me.sayandas.video.VideoResolution;
 import org.junit.jupiter.api.*;
 
 import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MessageRepositoryTest {
@@ -29,7 +31,7 @@ public class MessageRepositoryTest {
         // Load Test DB Properties
         Properties dbProps = new Properties();
         dbProps.load(MessageRepositoryTest.class.getClassLoader().getResourceAsStream("db.properties"));
-        System.out.println("DB properties = " + dbProps);
+        log.finest("DB properties = " + dbProps);
 
         // Create Test DB Connection
         connection = DriverManager.getConnection((String) dbProps.get("jdbc.url"),
@@ -38,26 +40,29 @@ public class MessageRepositoryTest {
 
         // Insert test data
         PreparedStatement statement = connection.prepareStatement(
-                "INSERT INTO MEDIA_VIDEO(MEDIA_ID, ORIGINAL_VIDEO_LOCATION, TRANSCODED_VERSIONS) VALUES (?,?,?)");
+                "INSERT INTO TRANSCODE_SERVICE_VIDEO(MEDIA_ID, TRANSCODED_VERSIONS,CREATED_AT,UPDATED_AT) VALUES (?,?,?,?)");
         statement.setString(1, testDataMediaId);
-        statement.setString(2, DUMMY_URL);
         HashMap<VideoResolution, String> tv = new HashMap<>();
         tv.put(VideoResolution.RES_1440p, DUMMY_URL);
         tv.put(VideoResolution.RES_1080p, DUMMY_URL);
         tv.put(VideoResolution.RES_720p, DUMMY_URL);
-        statement.setString(3, new ObjectMapper().writeValueAsString(tv));
+        statement.setString(2, new ObjectMapper().writeValueAsString(tv));
+        Timestamp t = Timestamp.valueOf(LocalDateTime.now(ZoneId.of("GMT")));
+        statement.setTimestamp(3,t);
+        statement.setTimestamp(4,t);
 
         PreparedStatement statement1 = connection.prepareStatement(
-                "INSERT INTO MESSAGE(MESSAGE_ID, MEDIA_ID, RECEIPT_HANDLE, RECEIVED_AT, RECEIVE_COUNT) VALUES (?,?,?,?,?)"
+                "INSERT INTO TRANSCODE_SERVICE_MESSAGE(MESSAGE_ID,MEDIA_ID,RECEIPT_HANDLE,CREATED_AT,UPDATED_AT) VALUES (?,?,?,?,?)"
         );
         statement1.setString(1, testDataMessageId);
         statement1.setString(2, testDataMediaId);
         statement1.setString(3, UUID.randomUUID().toString());
-        statement1.setString(4, Date.valueOf("2025-02-01").toString());
-        statement1.setInt(5, 1);
-        
+//        log.finest("t = " + t);
+        statement1.setTimestamp(4, t);
+        statement1.setTimestamp(5, t);
+
         statement.execute();
-        log.fine("Created test data object for media video table with media id = " + testDataMediaId);
+        log.fine("Created test data object for video table with media id = " + testDataMediaId);
         statement1.execute();
         log.fine("Created test data object for message table with message id = " + testDataMessageId);
     }
@@ -66,13 +71,13 @@ public class MessageRepositoryTest {
     public static void afterAll() throws SQLException {
         // Clean up Database
         Statement s = connection.createStatement();
-        s.execute("DELETE FROM MESSAGE");
-        s.execute("DELETE FROM MEDIA_VIDEO");
+        s.execute("DELETE FROM TRANSCODE_SERVICE_MESSAGE");
+        s.execute("DELETE FROM TRANSCODE_SERVICE_VIDEO");
     }
     
     @Order(1)
     @Test
-    public void givenId_ShouldFetchSingleRecord(){
+    public void givenId_ShouldFetchSingleRecord() throws Exception {
         // arrange
         MessageRepository rep = MessageRepository.getInstance();
         rep.setConnection(connection);
@@ -84,7 +89,6 @@ public class MessageRepositoryTest {
         assertEquals(testDataMessageId, m.getMessageId());
     }
     
-    @Order(2)
     @Test
     public void shouldInsertMessage() throws Exception {
         // arrange
@@ -105,5 +109,31 @@ public class MessageRepositoryTest {
         assertNotNull(actualMessage.getCreatedAt());
         assertNotNull(actualMessage.getUpdatedAt());
     }
+
+    @Test
+    public void givenUpdatedReceiptHandle_shouldUpdateMessage() throws Exception {
+        // arrange
+        MessageRepository rep = MessageRepository.getInstance();
+        rep.setConnection(connection);
+        Message expectedMessage = rep.fetchById(testDataMessageId);
+        log.finest("expectedMessage = " + expectedMessage);
+        
+        // act
+        String rh = UUID.randomUUID().toString();
+        expectedMessage.setReceiptHandle(rh);
+//        log.finest("expectedMessage with new receipt handle = " + expectedMessage);
+        Thread.sleep(2000);
+        int nRows = rep.updateById(testDataMessageId, expectedMessage);
+        Message actualMessage = rep.fetchById(testDataMessageId);
+//        log.finest("actualMessage = " + actualMessage);
+
+        // assert
+        assertEquals(1, nRows);
+        assertNotNull(actualMessage);
+        assertEquals(rh, actualMessage.getReceiptHandle());
+        assertTrue(actualMessage.getUpdatedAt().after(expectedMessage.getUpdatedAt()));
+
+    }
+
 
 }

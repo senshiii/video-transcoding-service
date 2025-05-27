@@ -2,10 +2,10 @@ package me.sayandas.db.model;
 
 import lombok.*;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
-import java.util.Objects;
 
 @AllArgsConstructor
 @ToString
@@ -14,11 +14,11 @@ import java.util.Objects;
 @EqualsAndHashCode
 public class BaseEntity {
 
-    private Date createdAt;
-    private Date updatedAt;
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
 
     public BaseEntity(){
-        this.createdAt = new Date();
-        this.updatedAt = new Date();
+        this.createdAt = Timestamp.valueOf(LocalDateTime.now(ZoneId.of("GMT")));
+        this.updatedAt = Timestamp.valueOf(LocalDateTime.now(ZoneId.of("GMT")));
     }
 }

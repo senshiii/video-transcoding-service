@@ -9,4 +9,5 @@ public class LambdaEnvVariables {
     public final static String DESTINATION_BUCKET = "destination_bucket";
     public final static String FFMPEG_LAYER_PATH = "ffmpeg_layer_path";
     public final static String FFPROBE_LAYER_PATH = "ffprobe_layer_path";
+    public final static String LOG_LEVEL = "log_level";
 }

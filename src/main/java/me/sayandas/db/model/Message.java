@@ -2,22 +2,19 @@ package me.sayandas.db.model;
 
 import lombok.*;
 
-import java.util.Date;
-
-import static software.amazon.awssdk.http.HttpStatusCode.CREATED;
-
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Builder
+@ToString(callSuper = true)
 public class Message extends BaseEntity {
 
     @Getter
     @ToString
     public enum MessageState {
         CREATED("CREATED"), PROCESSED("PROCESSED"), FAILED("FAILED");
-        private final String state;
+        private final String value;
         MessageState(String state){
-            this.state = state;
+            this.value = state;
         }
         public static MessageState from(String value){
             if(value == null || value.isEmpty()) throw new IllegalArgumentException("Cannot resolve message state for empty value");

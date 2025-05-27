@@ -1,18 +1,18 @@
-package me.sayandas.db.service;
+package me.sayandas.db.repository;
 
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.sayandas.db.model.MediaVideo;
-import me.sayandas.db.model.Message;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import me.sayandas.utils.LogUtils;
 import me.sayandas.video.VideoResolution;
 import org.junit.jupiter.api.*;
 
-import java.net.URI;
 import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -41,14 +41,16 @@ public class MessageVideoRepositoryTest {
 
         // Insert test data
         PreparedStatement statement = connection.prepareStatement(
-                "INSERT INTO MEDIA_VIDEO(MEDIA_ID, ORIGINAL_VIDEO_LOCATION, TRANSCODED_VERSIONS) VALUES (?,?,?)");
+                "INSERT INTO TRANSCODE_SERVICE_VIDEO(MEDIA_ID,TRANSCODED_VERSIONS,CREATED_AT,UPDATED_AT) VALUES (?,?,?,?)");
         statement.setString(1, testDataMedaId);
-        statement.setString(2, DUMMY_URL);
         HashMap<VideoResolution, String> tv = new HashMap<>();
         tv.put(VideoResolution.RES_1440p, DUMMY_URL);
         tv.put(VideoResolution.RES_1080p, DUMMY_URL);
         tv.put(VideoResolution.RES_720p, DUMMY_URL);
-        statement.setString(3, new ObjectMapper().writeValueAsString(tv));
+        statement.setString(2, new ObjectMapper().writeValueAsString(tv));
+        Timestamp t = Timestamp.valueOf(LocalDateTime.now(ZoneId.of("GMT")));
+        statement.setTimestamp(3,t);
+        statement.setTimestamp(4,t);
 
         statement.execute();
         log.fine("Created test data object for media video table with media id = " + testDataMedaId);
@@ -59,7 +61,7 @@ public class MessageVideoRepositoryTest {
     public static void afterAll() throws SQLException {
         // Clean up Database
         Statement s = connection.createStatement();
-        s.execute("DELETE FROM MEDIA_VIDEO");
+        s.execute("DELETE FROM TRANSCODE_SERVICE_VIDEO");
     }
 
     @Test
@@ -112,13 +114,16 @@ public class MessageVideoRepositoryTest {
         MediaVideoRepository mediaVideoRepository = MediaVideoRepository.getInstance();
         mediaVideoRepository.setConnection(connection);
         String value = "Updated Value";
+        MediaVideo expectedMediaVideo = mediaVideoRepository.fetchById(testDataMedaId);
         // act
+        Thread.sleep(2000); // Putting thread to sleep for the  updated at test
         int rowsAffected = mediaVideoRepository.updateTranscodedVersionsJsonById(testDataMedaId, VideoResolution.RES_1080p, value);
         // assert
-        MediaVideo m = mediaVideoRepository.fetchById(testDataMedaId);
+        MediaVideo actualMediaVideo = mediaVideoRepository.fetchById(testDataMedaId);
         assertEquals(1, rowsAffected);
-        assertNotNull(m.getTranscodedVersions().get(VideoResolution.RES_1080p));
-        assertEquals(m.getTranscodedVersions().get(VideoResolution.RES_1080p), value);
+        assertNotNull(actualMediaVideo.getTranscodedVersions().get(VideoResolution.RES_1080p));
+        assertEquals(actualMediaVideo.getTranscodedVersions().get(VideoResolution.RES_1080p), value);
+        assertTrue(actualMediaVideo.getUpdatedAt().after(expectedMediaVideo.getUpdatedAt()));
     }
 
 }

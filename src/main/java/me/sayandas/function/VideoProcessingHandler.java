@@ -6,9 +6,8 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.sayandas.db.model.Message;
-import me.sayandas.db.service.MediaVideoRepository;
-import me.sayandas.db.service.MessageRepository;
-import me.sayandas.model.queue.QueueMessageBody;
+import me.sayandas.db.repository.MediaVideoRepository;
+import me.sayandas.db.repository.MessageRepository;
 import me.sayandas.utils.LogUtils;
 import me.sayandas.utils.S3Utils;
 import me.sayandas.utils.SQSUtil;
@@ -35,7 +34,6 @@ public class VideoProcessingHandler implements RequestHandler<SQSEvent, Boolean>
         // Extract SQS message details
         SQSMessage message = sqsEvent.getRecords().get(0);
         logger.fine("Processing SQS Message: " + message.getMessageId() + ". Receipt Handle: " + message.getReceiptHandle());
-
         String queueName = System.getenv(LambdaEnvVariables.TRANSCODE_QUEUE),
                 destinationBucket = System.getenv(LambdaEnvVariables.DESTINATION_BUCKET),
                 dbUrl = System.getenv(LambdaEnvVariables.DB_URL),
@@ -47,13 +45,10 @@ public class VideoProcessingHandler implements RequestHandler<SQSEvent, Boolean>
                         throw new IllegalArgumentException("Environment variable " + val + " is not configured");
                 }
         );
-
         try(Connection connection = DriverManager.getConnection(dbUrl, dbUserName, dbPassword)){
             mediaVideoRepository.setConnection(connection);
             messageRepository.setConnection(connection);
-
            QueueMessageBody messageBody = objectMapper.readValue(message.getBody(), QueueMessageBody.class);
-
            // Fetch DB row from message table
             Message dbMsgRow = messageRepository.fetchById(message.getMessageId());
             // If message is received again, then delete message from queue
@@ -62,7 +57,6 @@ public class VideoProcessingHandler implements RequestHandler<SQSEvent, Boolean>
                 SQSUtil.deleteMessage(queueName, dbMsgRow.getReceiptHandle());
                 return true;
             }
-
            // Download file from S3
            String filePath = S3Utils.downloadFile(messageBody.s3ObjectKey(), messageBody.s3BucketName()).getAbsolutePath();
            String outputFilePath = filePath.substring(0, filePath.lastIndexOf(".")) + "_output" + filePath.substring(filePath.lastIndexOf("."));
@@ -70,19 +64,17 @@ public class VideoProcessingHandler implements RequestHandler<SQSEvent, Boolean>
            Path p = Paths.get(outputFilePath);
            VideoUtils.generateVideo(Paths.get(filePath), p, messageBody.targetResolution());
            logger.fine("Generated output video. Location = " + outputFilePath);
-
            // Upload file to S3
            String objectKey = dbMsgRow.getMediaId() + "/" + dbMsgRow.getMediaId() + "_" + messageBody.targetResolution() + ".mp4";
            S3Utils.uploadFile(objectKey, destinationBucket, p);
            String url = S3Utils.getObjectUrl(objectKey, destinationBucket);
-
            // Update Media Video table
            mediaVideoRepository.updateTranscodedVersionsJsonById(dbMsgRow.getMediaId(), messageBody.targetResolution(), url);
-
            // Delete SQS Message
            SQSUtil.deleteMessage(queueName, message.getReceiptHandle());
         } catch(Exception e){
-            logger.severe(LogUtils.getFullErrorMessage("Error occurred when processing SQS Message", e));
+            String errorMessage = LogUtils.getFullErrorMessage(e);
+            logger.severe("Error occurred when processing SQS Message "  + errorMessage);
             return false;
         }
         return true;
