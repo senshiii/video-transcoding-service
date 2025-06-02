@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import me.sayandas.db.model.Message;
 import me.sayandas.utils.LogUtils;
 import me.sayandas.video.VideoResolution;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.*;
 
 import java.sql.*;
@@ -14,7 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
-import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,14 +25,13 @@ public class MessageRepositoryTest {
     static Connection connection;
     static final String DUMMY_URL = "http://dummy.com/abcd";
     static String testDataMessageId = UUID.randomUUID().toString(), testDataMediaId = UUID.randomUUID().toString();
-    static final Logger log = LogUtils.getLoggerWithConsoleHandler(MessageRepositoryTest.class.getName());
+    static final Logger log = LogManager.getLogger(MessageRepositoryTest.class);
 
     @BeforeAll
     public static void beforeAll() throws Exception {
         // Load Test DB Properties
         Properties dbProps = new Properties();
         dbProps.load(MessageRepositoryTest.class.getClassLoader().getResourceAsStream("db.properties"));
-        log.finest("DB properties = " + dbProps);
 
         // Create Test DB Connection
         connection = DriverManager.getConnection((String) dbProps.get("jdbc.url"),
@@ -57,14 +57,14 @@ public class MessageRepositoryTest {
         statement1.setString(1, testDataMessageId);
         statement1.setString(2, testDataMediaId);
         statement1.setString(3, UUID.randomUUID().toString());
-//        log.finest("t = " + t);
+//        log.debug("t = " + t);
         statement1.setTimestamp(4, t);
         statement1.setTimestamp(5, t);
 
         statement.execute();
-        log.fine("Created test data object for video table with media id = " + testDataMediaId);
+        log.info("Created test data object for video table with media id = {}",testDataMediaId);
         statement1.execute();
-        log.fine("Created test data object for message table with message id = " + testDataMessageId);
+        log.info("Created test data object for message table with message id = {}",testDataMessageId);
     }
 
     @AfterAll
@@ -83,7 +83,7 @@ public class MessageRepositoryTest {
         rep.setConnection(connection);
         // act
         Message m = rep.fetchById(testDataMessageId);
-        log.fine("Message object fetched from DB: " + m);
+        log.info("Message object fetched from DB: {}", m);
         // assert
         assertEquals(testDataMediaId, m.getMediaId());
         assertEquals(testDataMessageId, m.getMessageId());
@@ -103,7 +103,7 @@ public class MessageRepositoryTest {
         rep.insertBulk(List.of(m));
         // assert
         Message actualMessage = rep.fetchById(messageId);
-        log.fine("Message object inserted in DB: " + actualMessage);
+        log.info("Message object inserted in DB: {}", actualMessage);
         assertEquals(actualMessage.getMessageId(), messageId);
         assertEquals(actualMessage.getMediaId(), testDataMediaId);
         assertNotNull(actualMessage.getCreatedAt());
@@ -116,16 +116,16 @@ public class MessageRepositoryTest {
         MessageRepository rep = MessageRepository.getInstance();
         rep.setConnection(connection);
         Message expectedMessage = rep.fetchById(testDataMessageId);
-        log.finest("expectedMessage = " + expectedMessage);
+        log.debug("expectedMessage = {}", expectedMessage);
         
         // act
         String rh = UUID.randomUUID().toString();
         expectedMessage.setReceiptHandle(rh);
-//        log.finest("expectedMessage with new receipt handle = " + expectedMessage);
+//        log.debug("expectedMessage with new receipt handle = " + expectedMessage);
         Thread.sleep(2000);
         int nRows = rep.updateById(testDataMessageId, expectedMessage);
         Message actualMessage = rep.fetchById(testDataMessageId);
-//        log.finest("actualMessage = " + actualMessage);
+//        log.debug("actualMessage = " + actualMessage);
 
         // assert
         assertEquals(1, nRows);

@@ -2,24 +2,8 @@ package me.sayandas.utils;
 
 import java.sql.SQLException;
 import java.util.Objects;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class LogUtils {
-
-    public static Logger getLoggerWithConsoleHandler(String loggerName){
-        return LogUtils.getLoggerWithConsoleHandler(loggerName, Level.ALL);
-    }
-
-    public static Logger getLoggerWithConsoleHandler(String loggerName, Level level){
-        Logger logger = Logger.getLogger(loggerName);
-        ConsoleHandler ch = new ConsoleHandler();
-        ch.setLevel(level);
-        logger.addHandler(ch);
-        logger.setLevel(level);
-        return logger;
-    }
 
     public static String getFullErrorMessage(Exception e){
         StringBuilder sb = new StringBuilder();
@@ -48,11 +32,11 @@ public class LogUtils {
         return sb.toString();
     }
 
-    public static void logAndThrowException(String logMessagePrefix, Exception e, Logger logger)throws Exception{
+    public static void logAndThrowException(String logMessagePrefix, Exception e, org.apache.logging.log4j.Logger logger)throws Exception{
         String errorMessage = "";
         if(e instanceof SQLException) errorMessage = getFullErrorMessage((SQLException) e) ;
         else errorMessage = getFullErrorMessage(e);
-        logger.severe(logMessagePrefix + " " + errorMessage);
+        logger.error(logMessagePrefix + " {}", errorMessage);
     }
 
 }

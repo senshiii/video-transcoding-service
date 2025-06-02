@@ -6,8 +6,9 @@ import me.sayandas.db.model.MediaVideo;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import me.sayandas.utils.LogUtils;
 import me.sayandas.video.VideoResolution;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.*;
 
 import java.sql.*;
@@ -17,22 +18,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
-import java.util.logging.Logger;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class MessageVideoRepositoryTest {
+public class VideoRepositoryTest {
 
     static Connection connection;
     static final String DUMMY_URL = "http://dummy.com/abcd";
     static String testDataMedaId = UUID.randomUUID().toString();
-    static final Logger log = LogUtils.getLoggerWithConsoleHandler(MessageVideoRepositoryTest.class.getName());
+    static final Logger log = LogManager.getLogger(VideoRepositoryTest.class);
 
     @BeforeAll
     public static void beforeAll() throws Exception {
         // Load Test DB Properties
         Properties dbProps = new Properties();
-        dbProps.load(MessageVideoRepositoryTest.class.getClassLoader().getResourceAsStream("db.properties"));
-        System.out.println("DB properties = " + dbProps);
+        dbProps.load(VideoRepositoryTest.class.getClassLoader().getResourceAsStream("db.properties"));
 
         // Create Test DB Connection
         connection = DriverManager.getConnection((String) dbProps.get("jdbc.url"),
@@ -53,7 +52,7 @@ public class MessageVideoRepositoryTest {
         statement.setTimestamp(4,t);
 
         statement.execute();
-        log.fine("Created test data object for media video table with media id = " + testDataMedaId);
+        log.info("Created test data object for media video table with media id = {}", testDataMedaId);
 
     }
 
@@ -72,7 +71,7 @@ public class MessageVideoRepositoryTest {
         rep.setConnection(connection);
         // act
         MediaVideo mv = rep.fetchById(testDataMedaId);
-        log.fine("Media video object fetched from Database: " + mv);
+        log.info("Media video object fetched from Database: {}", mv);
 
         // assert
         assertEquals(mv.getMediaId(), testDataMedaId);
@@ -103,7 +102,7 @@ public class MessageVideoRepositoryTest {
 
         // assert
         MediaVideo actual = mediaVideoRepository.fetchById(id);
-        log.fine("Media Video object inserted in DB: " + actual);
+        log.info("Media Video object inserted in DB: {}", actual);
         assertEquals(m.getMediaId(), actual.getMediaId());
 
     }

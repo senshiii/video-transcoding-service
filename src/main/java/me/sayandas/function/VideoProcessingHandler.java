@@ -12,6 +12,8 @@ import me.sayandas.utils.LogUtils;
 import me.sayandas.utils.S3Utils;
 import me.sayandas.utils.SQSUtil;
 import me.sayandas.video.VideoUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,21 +21,19 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.List;
 import java.util.Objects;
-import java.util.logging.Logger;
 
 public class VideoProcessingHandler implements RequestHandler<SQSEvent, Boolean> {
 
-    final Logger logger = LogUtils.getLoggerWithConsoleHandler(this.getClass().getName());
+    final Logger logger = LogManager.getLogger(VideoProcessingHandler.class);
     final ObjectMapper objectMapper = new ObjectMapper();
     final MessageRepository messageRepository = MessageRepository.getInstance();
     final MediaVideoRepository mediaVideoRepository = MediaVideoRepository.getInstance();
-
 
     @Override
     public Boolean handleRequest(SQSEvent sqsEvent, Context context) {
         // Extract SQS message details
         SQSMessage message = sqsEvent.getRecords().get(0);
-        logger.fine("Processing SQS Message: " + message.getMessageId() + ". Receipt Handle: " + message.getReceiptHandle());
+        logger.info("Processing SQS Message: {}. Receipt Handle: {}", message.getMessageId(), message.getReceiptHandle());
         String queueName = System.getenv(LambdaEnvVariables.TRANSCODE_QUEUE),
                 destinationBucket = System.getenv(LambdaEnvVariables.DESTINATION_BUCKET),
                 dbUrl = System.getenv(LambdaEnvVariables.DB_URL),
@@ -48,36 +48,58 @@ public class VideoProcessingHandler implements RequestHandler<SQSEvent, Boolean>
         long preDBConnTime = System.currentTimeMillis();
         try(Connection connection = DriverManager.getConnection(dbUrl, dbUserName, dbPassword)){
             long postDBConnTime = System.currentTimeMillis();
-            logger.fine("Established Database connection. Time taken to establish DB connection (in ms): " + (postDBConnTime - preDBConnTime));
+            logger.info("Established Database connection. Time taken to establish DB connection (in ms): {}", postDBConnTime - preDBConnTime);
             mediaVideoRepository.setConnection(connection);
             messageRepository.setConnection(connection);
            QueueMessageBody messageBody = objectMapper.readValue(message.getBody(), QueueMessageBody.class);
-           // Fetch DB row from message table
+
+            // Fetch DB row from message table
             Message dbMsgRow = messageRepository.fetchById(message.getMessageId());
+
             // If message is received again, then delete message from queue
             if(dbMsgRow.getReceiptHandle() != null && dbMsgRow.getReceiptHandle().isBlank()){
-                logger.fine("Message already processed before. Processed receipt handle: " + dbMsgRow.getReceiptHandle() + ". Current Receipt Handle: " + message.getReceiptHandle());
+                logger.info("Message already processed before. Processed receipt handle: {}. Current Receipt Handle: {}", dbMsgRow.getReceiptHandle(), message.getReceiptHandle());
                 SQSUtil.deleteMessage(queueName, dbMsgRow.getReceiptHandle());
                 return true;
             }
-           // Download file from S3
+
+            // Download file from S3
            String filePath = S3Utils.downloadFile(messageBody.s3ObjectKey(), messageBody.s3BucketName()).getAbsolutePath();
            String outputFilePath = filePath.substring(0, filePath.lastIndexOf(".")) + "_output" + filePath.substring(filePath.lastIndexOf("."));
-           logger.finest("Output file path: " + outputFilePath);
+           logger.debug("Output file path: {}", outputFilePath);
            Path p = Paths.get(outputFilePath);
            VideoUtils.generateVideo(Paths.get(filePath), p, messageBody.targetResolution());
-           logger.fine("Generated output video. Location = " + outputFilePath);
+           logger.info("Generated output video. Location = {}", outputFilePath);
+
            // Upload file to S3
            String objectKey = dbMsgRow.getMediaId() + "/" + dbMsgRow.getMediaId() + "_" + messageBody.targetResolution() + ".mp4";
            S3Utils.uploadFile(objectKey, destinationBucket, p);
            String url = S3Utils.getObjectUrl(objectKey, destinationBucket);
+
            // Update Media Video table
            mediaVideoRepository.updateTranscodedVersionsJsonById(dbMsgRow.getMediaId(), messageBody.targetResolution(), url);
+
+           // Update message table
+           messageRepository.updateById(message.getMessageId(), Message
+                   .builder()
+                           .state(Message.MessageState.PROCESSED)
+                           .receiptHandle(message.getReceiptHandle())
+                   .build());
+
            // Delete SQS Message
            SQSUtil.deleteMessage(queueName, message.getReceiptHandle());
         } catch(Exception e){
             String errorMessage = LogUtils.getFullErrorMessage(e);
-            logger.severe("Error occurred when processing SQS Message "  + errorMessage);
+            logger.error("Error occurred when processing SQS Message: {}", errorMessage);
+            try {
+                messageRepository.updateById(message.getMessageId(), Message
+                        .builder()
+                        .state(Message.MessageState.PROCESSED)
+                        .receiptHandle(message.getReceiptHandle())
+                        .build());
+            } catch (Exception ex) {
+                logger.error("Error occurred when updating message table: {}", LogUtils.getFullErrorMessage(e));
+            }
             return false;
         }
         return true;

@@ -7,25 +7,23 @@ import lombok.*;
 import me.sayandas.db.model.MediaVideo;
 import me.sayandas.utils.LogUtils;
 import me.sayandas.video.VideoResolution;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.*;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.logging.Logger;
 
-@ToString
-@EqualsAndHashCode
 public class MediaVideoRepository {
 
     @Setter
     private Connection connection;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final Logger log = LogUtils.getLoggerWithConsoleHandler(this.getClass().getName());
+    private final Logger log = LogManager.getLogger(this.getClass().getName());
     private static MediaVideoRepository mediaVideoRepository = null;
     private final String TABLE_NAME = "TRANSCODE_SERVICE_VIDEO";
 

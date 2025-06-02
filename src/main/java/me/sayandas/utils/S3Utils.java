@@ -1,7 +1,8 @@
 package me.sayandas.utils;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.core.ResponseInputStream;
-import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
@@ -12,13 +13,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.UUID;
-import java.util.logging.Logger;
 
 
 public class S3Utils {
 
     private static S3Client s3Client;
-    private static Logger log = LogUtils.getLoggerWithConsoleHandler(S3Utils.class.getName());
+    private static Logger log = LogManager.getLogger(S3Utils.class);
 
     static{
         s3Client = S3Client.builder().region(Region.US_EAST_1).build();

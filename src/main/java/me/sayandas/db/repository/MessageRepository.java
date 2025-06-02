@@ -1,26 +1,23 @@
 package me.sayandas.db.repository;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import lombok.EqualsAndHashCode;
 import lombok.Setter;
-import lombok.ToString;
 import me.sayandas.db.model.Message;
 import me.sayandas.utils.LogUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.logging.Logger;
 
-@ToString
-@EqualsAndHashCode
 public class MessageRepository {
 
     private static MessageRepository messageRepository = null;
     @Setter
     private Connection connection;
-    private final Logger log = LogUtils.getLoggerWithConsoleHandler(this.getClass().getName());
+    private final Logger log = LogManager.getLogger(this.getClass().getName());
     private final String TABLE_NAME = "TRANSCODE_SERVICE_MESSAGE";
 
     private MessageRepository(){}
@@ -81,17 +78,13 @@ public class MessageRepository {
             a(updateQuery);
             int paramIndex = 1;
             if(updateReceiptHandle) {
-                log.finest("Adding parameter for receipt handle: " + paramIndex + " : " + data.getReceiptHandle());
                 pStat.setString(paramIndex++, data.getReceiptHandle());
             }
             if(updateState){
-                log.finest("Adding parameter for state: " + paramIndex + " : " + data.getState());
                 pStat.setString(paramIndex++, data.getState().getValue());
             }
             Timestamp t = getCurrentTimestamp();
-            log.finest("Adding parameter for updated at: " + paramIndex + " : " + t);
             pStat.setTimestamp(paramIndex++, t);
-
             pStat.setString(paramIndex, messageId);
             return pStat.executeUpdate();
         }catch(SQLException e){
@@ -123,7 +116,7 @@ public class MessageRepository {
     }
 
     private void a(String s){
-        log.finest("Firing query " + s);
+        log.debug("Firing query {}", s);
     }
 
     private Timestamp getCurrentTimestamp(){

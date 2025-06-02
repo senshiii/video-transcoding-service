@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class SQSUtil {
 
-    private static SqsClient sqsClient;
+    private static final SqsClient sqsClient;
 
     static {
         try {
@@ -27,17 +27,13 @@ public class SQSUtil {
     public static String enqueueMessage(String queueName,
                                       String messageBody, Map<String, String> messageAttributes){
         String queueURL;
-        try {
-            queueURL = getQueueUrl(queueName).queueUrl();
-            SendMessageRequest sendMsgRequest = SendMessageRequest.builder()
+        queueURL = getQueueUrl(queueName).queueUrl();
+        SendMessageRequest sendMsgRequest = SendMessageRequest.builder()
                     .messageBody(messageBody)
                     .queueUrl(queueURL)
                     .build();
-            SendMessageResponse res = sqsClient.sendMessage(sendMsgRequest);
-            return res.messageId();
-        }catch(Exception e){
-            throw new RuntimeException("Error occurred when publishing message to queue", e);
-        }
+        SendMessageResponse res = sqsClient.sendMessage(sendMsgRequest);
+        return res.messageId();
     }
 
     public static GetQueueUrlResponse getQueueUrl(String queueName){
@@ -48,7 +44,7 @@ public class SQSUtil {
 
     }
 
-    public static boolean deleteMessage(String queueName, String receiptHandle) {
+    public static void deleteMessage(String queueName, String receiptHandle) {
         GetQueueUrlRequest queueUrlRequest = GetQueueUrlRequest.builder().queueName(queueName).build();
         String queueUrl = getQueueUrl(queueName).queueUrl();
         DeleteMessageRequest deleteMessageRequest = DeleteMessageRequest.builder()
@@ -56,7 +52,6 @@ public class SQSUtil {
                 .receiptHandle(receiptHandle)
                 .build();
         sqsClient.deleteMessage(deleteMessageRequest);
-        return true;
     }
 
 }

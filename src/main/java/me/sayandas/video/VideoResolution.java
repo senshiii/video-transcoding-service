@@ -25,7 +25,6 @@ public enum VideoResolution {
     private final int width;
     @Getter
     private final int height;
-    private static final Logger log = LogUtils.getLoggerWithConsoleHandler(VideoResolution.class.getName());
 
     VideoResolution(int width, int height){
         this.width = width;

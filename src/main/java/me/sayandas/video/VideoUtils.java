@@ -8,29 +8,30 @@ import net.bramp.ffmpeg.FFprobe;
 import net.bramp.ffmpeg.builder.FFmpegBuilder;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import net.bramp.ffmpeg.probe.FFmpegStream;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class VideoUtils {
 
     private static FFprobe ffprobe = null;
     private static FFmpeg ffmpeg = null;
-    private static Logger log = LogUtils.getLoggerWithConsoleHandler(VideoUtils.class.getName());
+    private static Logger log = LogManager.getLogger(VideoUtils.class);
 
     static {
         try {
             String ffmpegPath = System.getenv(LambdaEnvVariables.FFMPEG_LAYER_PATH),
                     ffprobePath = System.getenv(LambdaEnvVariables.FFPROBE_LAYER_PATH);
-            log.finest("Ffmpeg location (from env): " + ffmpegPath);
-            log.finest("FFprobe location (from env): " + ffprobePath);
+            log.debug("Ffmpeg location (from env): {}",ffmpegPath);
+            log.debug("FFprobe location (from env): {}",ffprobePath);
             ffmpeg = new FFmpeg(ffmpegPath);
-            log.fine("Successfully loaded ffmpeg");
+            log.info("Successfully loaded ffmpeg");
             ffprobe = new FFprobe(ffprobePath);
-            log.fine("Successfully loaded ffprobe");
+            log.info("Successfully loaded ffprobe");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
